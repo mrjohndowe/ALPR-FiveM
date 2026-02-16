@@ -174,3 +174,40 @@ RegisterNetEvent( "wk_wars2x_sync:receiveRadarData" )
 AddEventHandler( "wk_wars2x_sync:receiveRadarData", function( data )
 	READER:LoadDataFromDriver( data[2] )
 end )
+
+RegisterNetEvent("alpr:returnPlate", function(data)
+    local payload = {
+        plate = data.plate,
+        camera = data.camera,
+        vehicle = false,
+        bolo = false
+    }
+
+    if data.vehicle then
+        payload.vehicle = {
+            stolen = data.vehicle.stolen == 1,
+            code5 = data.vehicle.code5 == 1,
+            points = data.vehicle.points,
+            info = data.vehicle.information,
+            image = data.vehicle.image
+        }
+    end
+
+    if data.bolo then
+        payload.bolo = {
+            title = data.bolo.title,
+            owner = data.bolo.owner,
+            individual = data.bolo.individual,
+            detail = data.bolo.detail,
+            tags = data.bolo.tags,
+            gallery = data.bolo.gallery,
+            officers = data.bolo.officersinvolved,
+            time = data.bolo.time
+        }
+    end
+
+    SendNUIMessage({
+        type = "ALPR_ALERT",
+        payload = payload
+    })
+end)

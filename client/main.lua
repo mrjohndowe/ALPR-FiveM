@@ -104,6 +104,8 @@ RegisterNUICallback('disable', function()
 	READER:SetDisplay( false )
 end)
 
+
+
 AddEventHandler('onResourceStop', function(resourceName)
 	if (GetCurrentResourceName() ~= resourceName) then
 		return
@@ -111,7 +113,9 @@ AddEventHandler('onResourceStop', function(resourceName)
 	SetNuiFocus(false, false)
 end)
 
-
+RegisterNUICallback('scanPlate', function(data)
+    ScanPlate(data.camera)
+end)
 
 function GetUISettings()
 	SendNUIMessage({ 
@@ -127,6 +131,26 @@ function GetUISettings()
 			ncicVol=GetResourceKvpString("alpr_ncic_vol")
 		}
 	})
+end
+
+function ScanPlate(camera)
+    local ped = PlayerPedId()
+    local veh = nil
+
+    if camera == "front" then
+        veh = GetVehiclePedIsIn(ped, false)
+    elseif camera == "rear" then
+        veh = GetVehiclePedIsIn(ped, false)
+    end
+
+    if veh == 0 then return end
+
+    local plate = GetVehicleNumberPlateText(veh)
+    if not plate then return end
+
+    plate = plate:gsub("%s+", "")
+
+    TriggerServerEvent("alpr:checkPlate", plate, camera)
 end
 
 RegisterCommand("loadAlprSettings", function( ... )
