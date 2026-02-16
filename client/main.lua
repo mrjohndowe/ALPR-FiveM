@@ -104,6 +104,89 @@ RegisterNUICallback('disable', function()
 	READER:SetDisplay( false )
 end)
 
+RegisterNUICallback('alpr_create_marker', function(data)
+    CachedData[data.licensePlate] = {
+        plate = data.licensePlate,
+        charid = data.characterId,
+        reason = data.reason,
+        firstname = data.firstName,
+        lastname = data.lastName,
+        created = data.createdAt,
+        markerId = data.markerId
+    }
+end)
+
+RegisterNetEvent("alpr:returnPlate", function(data)
+    local plate = data.plate
+    local camera = data.camera
+
+    -- Build payload for NUI
+    local payload = {
+        plate = plate,
+        camera = camera,
+        vehicle = false,
+        bolo = false
+    }
+
+    -- VEHICLE INFO
+    if data.vehicle then
+        payload.vehicle = {
+            stolen = data.vehicle.stolen == 1,
+            code5 = data.vehicle.code5 == 1,
+            points = data.vehicle.points,
+            info = data.vehicle.information,
+            image = data.vehicle.image
+        }
+    end
+
+    -- BOLO INFO
+    if data.bolo then
+        payload.bolo = {
+            title = data.bolo.title,
+            owner = data.bolo.owner,
+            individual = data.bolo.individual,
+            detail = data.bolo.detail,
+            tags = data.bolo.tags,
+            gallery = data.bolo.gallery,
+            officers = data.bolo.officersinvolved,
+            time = data.bolo.time
+        }
+
+        -- AUTO‑CREATE MARKER IN UI
+        local markerId = math.random(100000, 999999)
+
+        SendNUIMessage({
+            type = "ALPR_CREATE_MARKER",
+            payload = {
+                licensePlate = plate,
+                characterId = data.bolo.individual or "UNKNOWN",
+                reason = data.bolo.detail or "BOLO Hit",
+                firstName = data.bolo.owner or "",
+                lastName = "",
+                createdAt = data.bolo.time or "",
+                markerId = markerId
+            }
+        })
+
+        -- Store marker in client cache
+        CachedData[plate] = {
+            plate = plate,
+            charid = data.bolo.individual or "UNKNOWN",
+            reason = data.bolo.detail or "BOLO Hit",
+            firstname = data.bolo.owner or "",
+            lastname = "",
+            created = data.bolo.time or "",
+            markerId = markerId
+        }
+    end
+
+    -- SEND ALERT TO UI
+    SendNUIMessage({
+        type = "ALPR_ALERT",
+        payload = payload
+    })
+end)
+
 
 
 AddEventHandler('onResourceStop', function(resourceName)

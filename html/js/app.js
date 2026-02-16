@@ -156,6 +156,13 @@ function setPlate(isFront, licensePlate, plateIndex) {
   });
 }
 
+if (event.data.type === "ALPR_CREATE_MARKER") {
+    fetch(`https://${GetParentResourceName()}/alpr_create_marker`, {
+        method: "POST",
+        body: JSON.stringify(event.data.payload)
+    });
+}
+
 /**
  * Updates the Alert UI element to show the correct size for active alerts
  */
